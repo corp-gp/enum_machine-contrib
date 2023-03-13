@@ -1,0 +1,18 @@
+inherit_gem:
+  rubocop-gp:
+    - ./config/default.yml
+
+AllCops:
+  TargetRubyVersion: 2.6
+
+Rails/ApplicationRecord:
+  Enabled: false
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Style/Next:
+  Enabled: false
+
+Style/ClassVars:
+ Enabled: false
