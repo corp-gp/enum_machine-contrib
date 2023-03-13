@@ -13,15 +13,3 @@ module EnumMachineContrib
 
   end
 end
-
-module EnumMachine
-
-  class Machine
-
-    include EnumMachineContrib::HasDecisionTree
-
-  end
-
-  class InvalidTransitionGraph < StandardError; end
-
-end

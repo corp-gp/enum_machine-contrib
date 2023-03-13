@@ -2,7 +2,7 @@
 
 require 'rspec'
 
-require 'enum_machine_contrib/has_decision_tree'
+require 'enum_machine_contrib/enum_machine'
 
 RSpec.describe EnumMachineContrib::HasDecisionTree do
   describe '#decision_tree' do

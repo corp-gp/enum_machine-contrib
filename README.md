@@ -22,7 +22,7 @@ Suppose we have `Order` AR-model with the state machine specified by [enum_machi
 
 `config/initializers/enum_machine.rb`
 ```ruby
-require 'enum_machine_contrib/has_decision_tree'
+require 'enum_machine_contrib/enum_machine'
 ```
 
 `app/models/order.rb`

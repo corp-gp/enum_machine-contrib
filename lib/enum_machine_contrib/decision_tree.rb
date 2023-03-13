@@ -7,11 +7,12 @@ module EnumMachineContrib
 
     include TSort
 
-    def tsort_each_child(node, &block)
-      fetch(node).outcoming_edges.each { |edge| block.call(edge.to.value) if edge.active? }
+    def tsort_each_child(node, &_block)
+      fetch(node).outcoming_edges.each { |edge| yield(edge.to.value) if edge.active? }
     end
-    def tsort_each_node(&block)
-      each_value { |vertex| block.call(vertex.value) if vertex.active? }
+
+    def tsort_each_node(&_block)
+      each_value { |vertex| yield(vertex.value) if vertex.active? }
     end
 
     def self.wrap(hsh)
@@ -83,7 +84,7 @@ module EnumMachineContrib
 
     CLEAN_ID = proc { |s| s.gsub(/[^[[:alnum:]]]/, '_') }
 
-    def as_dot
+    def as_dot # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
       combined_values  = values.filter(&:combined?).flat_map(&:value).to_set
       visible_vertexes = values.reject { |vertex| (combined_values & vertex.value).any? && !vertex.combined? }
 
@@ -99,10 +100,10 @@ module EnumMachineContrib
             elsif vertex.combined?
               { id: vertex.value.map(&CLEAN_ID).join('__'), label: vertex.value.join('/') }
             elsif vertex.cycled?
-              { id: vertex.value[0].yield_self(&CLEAN_ID), cluster_id: "cluster_#{cluster_id}" }
+              { id: vertex.value[0].then(&CLEAN_ID), cluster_id: "cluster_#{cluster_id}" }
             else
-              { id: vertex.value.join.yield_self(&CLEAN_ID), label: vertex.value.join }
-            end
+              { id: vertex.value.join.then(&CLEAN_ID), label: vertex.value.join }
+            end,
           ]
         }
           .to_h
@@ -124,7 +125,7 @@ module EnumMachineContrib
         visible_vertexes.flat_map do |vertex|
           vertex.outcoming_edges.filter_map do |edge|
             if (!edge.from.combined? && (combined_values & edge.from.value).any?) ||
-              (!edge.to.combined? && (combined_values & edge.to.value).any?)
+               (!edge.to.combined? && (combined_values & edge.to.value).any?)
               next
             end
 

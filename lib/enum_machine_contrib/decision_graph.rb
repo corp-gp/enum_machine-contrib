@@ -25,7 +25,6 @@ module EnumMachineContrib
           @edges << from_vertex.add_edge(to_vertex)
         end
       end
-
     end
 
     def decision_tree
@@ -93,7 +92,7 @@ module EnumMachineContrib
       end
     end
 
-    def resolve_strong_component!(component_cycled_vertex)
+    def resolve_strong_component!(component_cycled_vertex) # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
       input_values  = component_cycled_vertex.incoming_edges.filter(&:active?).flat_map { |edge| edge.from.value }
       output_values = component_cycled_vertex.outcoming_edges.filter(&:active?).flat_map { |vertex| vertex.to.value }
 
@@ -107,13 +106,16 @@ module EnumMachineContrib
       single_incoming_vertexes.each do |to_vertex|
         from_vertex = to_vertex.incoming_edges.first.from
 
-        (from_vertex.incoming_edges + from_vertex.outcoming_edges).group_by { |edge| [edge.from.value.to_s, edge.to.value.to_s].sort }.values.filter { |current_edges| current_edges.size > 1 }.each do |current_edges|
-          current_edges.each do |edge|
-            # S1 -> S2; S2 -> [S1, S3]
-            # drops back reference S2 -> S1
-            edge.dropped! if edge.from == from_vertex
+        (from_vertex.incoming_edges + from_vertex.outcoming_edges)
+          .group_by { |edge| [edge.from.value.to_s, edge.to.value.to_s].sort }
+          .values
+          .filter { |current_edges| current_edges.size > 1 }.each do |current_edges|
+            current_edges.each do |edge|
+              # S1 -> S2; S2 -> [S1, S3]
+              # drops back reference S2 -> S1
+              edge.dropped! if edge.from == from_vertex
+            end
           end
-        end
       end
 
       resolved_not_visited_vertexes = []
@@ -142,7 +144,7 @@ module EnumMachineContrib
               current_chain.unshift(single_incoming_edge.from)
             else
               current_chain.push(single_incoming_edge.to)
-            end
+            end,
           )
         else
           single_incoming_chains << [single_incoming_edge.from, single_incoming_edge.to]

@@ -7,8 +7,11 @@ require 'active_support/core_ext/array/wrap'
 require 'enum_machine_contrib/version'
 
 module EnumMachineContrib
+
+  autoload :HasDecisionTree, 'enum_machine_contrib/has_decision_tree'
   autoload :DecisionGraph, 'enum_machine_contrib/decision_graph'
   autoload :DecisionTree, 'enum_machine_contrib/decision_tree'
   autoload :Vertex, 'enum_machine_contrib/vertex'
   autoload :Edge, 'enum_machine_contrib/edge'
+
 end

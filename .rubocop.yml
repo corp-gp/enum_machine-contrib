@@ -16,3 +16,7 @@ Style/Next:
 
 Style/ClassVars:
  Enabled: false
+
+Naming/FileName:
+  Exclude:
+    - lib/enum_machine-contrib.rb
