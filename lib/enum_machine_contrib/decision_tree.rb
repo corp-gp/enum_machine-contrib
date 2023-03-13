@@ -85,7 +85,7 @@ module EnumMachineContrib
 
     def as_dot
       combined_values  = values.filter(&:combined?).flat_map(&:value).to_set
-      visible_vertexes = values.reject { |vertex| combined_values.intersect?(vertex.value) && !vertex.combined? }
+      visible_vertexes = values.reject { |vertex| (combined_values & vertex.value).any? && !vertex.combined? }
 
       cycled_vertexes, plain_vertexes = visible_vertexes.partition(&:cycled?)
 
@@ -123,8 +123,8 @@ module EnumMachineContrib
       transitions =
         visible_vertexes.flat_map do |vertex|
           vertex.outcoming_edges.filter_map do |edge|
-            if (!edge.from.combined? && combined_values.intersect?(edge.from.value)) ||
-              (!edge.to.combined? && combined_values.intersect?(edge.to.value))
+            if (!edge.from.combined? && (combined_values & edge.from.value).any?) ||
+              (!edge.to.combined? && (combined_values & edge.to.value).any?)
               next
             end
 
