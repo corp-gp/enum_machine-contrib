@@ -1,5 +1,3 @@
-[![Build](https://github.com/corp-gp/enum_machine-contrib/workflows/Build/badge.svg)](https://github.com/corp-gp/enum_machine-contrib/actions)
-
 # EnumMachine extensions and tools
 
 This repository contains extensions and development tools for the [enum_machine](https://github.com/corp-gp/enum_machine)
