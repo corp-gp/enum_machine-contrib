@@ -6,11 +6,11 @@ This repository contains extensions and development tools for the [enum_machine]
 
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add enum_machine-contrib ruby-graphviz --group "development"
+    $ bundle add enum_machine-contrib --group "development"
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install enum_machine-contrib ruby-graphviz
+    $ gem install enum_machine-contrib
 
 The gem depends on [GraphViz](https://graphviz.org/). See the [installation notes](https://graphviz.org/download/)
 
@@ -45,11 +45,9 @@ class Order < ActiveRecord::Base
 end
 ```
 
-The gem allows to get a visual representation of the state's graph.
+The gem allows to get a visual representation of the state's graph. Model name `Order` and attribute constant `STATE` should be defined in rake task to render image.
 
-```shell
-bundle exec rake enum_machine:vis[Order::STATE]
-```
+    $ bundle exec rake enum_machine:vis[Order::STATE]
 
 You will see:
 
