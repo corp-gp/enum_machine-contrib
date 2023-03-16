@@ -16,12 +16,7 @@ The gem depends on [GraphViz](https://graphviz.org/). See the [installation note
 
 ## Usage
 
-Suppose we have `Order` AR-model with the state machine specified by [enum_machine](https://github.com/corp-gp/enum_machine)
-
-`config/initializers/enum_machine.rb`
-```ruby
-require 'enum_machine_contrib/enum_machine'
-```
+Suppose we have AR-model `Order` with the state machine specified by [enum_machine](https://github.com/corp-gp/enum_machine)
 
 `app/models/order.rb`
 ```ruby
@@ -50,10 +45,10 @@ class Order < ActiveRecord::Base
 end
 ```
 
-The gem allows you to get a visual representation of the graph of state transitions.
+The gem allows to get a visual representation of the state's graph.
 
-```ruby
-Order::STATE.machine.decision_tree.visualize.output(png: 'states.png')
+```shell
+bundle exec rake enum_machine:vis[Order::STATE]
 ```
 
 You will see:

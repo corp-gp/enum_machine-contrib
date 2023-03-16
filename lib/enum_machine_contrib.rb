@@ -5,6 +5,8 @@ require 'active_support/core_ext/enumerable'
 require 'active_support/core_ext/array/wrap'
 
 require 'enum_machine_contrib/version'
+require 'enum_machine_contrib/railtie' if defined?(Rails::Railtie)
+require 'enum_machine_contrib/enum_machine/errors'
 
 module EnumMachineContrib
 

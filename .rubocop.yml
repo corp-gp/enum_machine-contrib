@@ -20,3 +20,7 @@ Style/ClassVars:
 Naming/FileName:
   Exclude:
     - lib/enum_machine-contrib.rb
+
+Gp/ClassOrModuleDeclaredInWrongFile:
+  Exclude:
+    - lib/enum_machine_contrib/enum_machine/**/*.rb
