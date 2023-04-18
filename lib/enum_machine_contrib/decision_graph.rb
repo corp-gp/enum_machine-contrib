@@ -97,10 +97,10 @@ module EnumMachineContrib
       output_values = component_cycled_vertex.outcoming_edges.filter(&:active?).flat_map { |vertex| vertex.to.value }
 
       active_vertexes = vertexes.filter(&:active?)
-      input_vertexes = active_vertexes.filter { |vertex| (input_values & vertex.value).any? }
-      output_vertexes = active_vertexes.filter { |vertex| (output_values & vertex.value).any? }
+      input_vertexes = active_vertexes.reject { |vertex| (input_values & vertex.value).empty? }
+      output_vertexes = active_vertexes.reject { |vertex| (output_values & vertex.value).empty? }
 
-      component_vertexes = active_vertexes.filter { |vertex| (component_cycled_vertex.value & vertex.value).any? }
+      component_vertexes = active_vertexes.reject { |vertex| (component_cycled_vertex.value & vertex.value).empty? }
 
       single_incoming_vertexes = (component_vertexes + output_vertexes).filter { |vertex| vertex.incoming_edges.size == 1 }
       single_incoming_vertexes.each do |to_vertex|
