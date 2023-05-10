@@ -50,7 +50,7 @@ module EnumMachineContrib
         current_edge = nil
 
         visited_vertexes.each do |vertex|
-          current_edge = fetch(vertex.value).outcoming_edges.detect { |edge| edge.to == to_vertex }
+          current_edge = fetch(vertex.value).outcoming_edges.detect { |edge| edge.active? && edge.to == to_vertex }
           break if current_edge
         end
 

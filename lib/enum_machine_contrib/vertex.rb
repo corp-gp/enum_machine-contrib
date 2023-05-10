@@ -6,14 +6,15 @@ module EnumMachineContrib
     Struct.new(:value) do
       attr_accessor :mode, :incoming_edges, :outcoming_edges, :level
 
-      VERTEX_MODES = %i[plain dropped combined cycled].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
+      VERTEX_MODES = %i[pending dropped combined cycled].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
 
       def initialize(value)
         self.value = value
         self.outcoming_edges = Set.new
         self.incoming_edges = Set.new
 
-        plain!
+        @resolved = false
+        pending!
       end
 
       VERTEX_MODES.each do |mode|
@@ -36,6 +37,14 @@ module EnumMachineContrib
 
       def active?
         !dropped?
+      end
+
+      def resolved!
+        @resolved = true
+      end
+
+      def resolved?
+        @resolved == true
       end
 
       def dropped!

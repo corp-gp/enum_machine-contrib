@@ -43,6 +43,10 @@ module EnumMachineContrib
         to.incoming_edges.each do |edge|
           edge.dropped! unless edge == self
         end
+
+        to.outcoming_edges.detect { |edge| edge.to == from }&.dropped!
+
+        to.resolved!
       end
 
       def inspect
