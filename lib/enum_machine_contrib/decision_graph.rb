@@ -22,7 +22,7 @@ module EnumMachineContrib
           to_vertex = vertex_by_value[to_value]
           @vertexes << to_vertex
 
-          @edges << from_vertex.add_edge(to_vertex)
+          @edges << from_vertex.edge_to(to_vertex)
         end
       end
     end
@@ -63,7 +63,7 @@ module EnumMachineContrib
       vertexes.filter(&:active?).to_h do |vertex|
         [
           vertex.value,
-          vertex.outcoming_edges.filter_map { |edge| edge.to.value if edge.active? },
+          vertex.outcoming_edges.map { |edge| edge.to.value },
         ]
       end
     end
@@ -93,8 +93,8 @@ module EnumMachineContrib
     end
 
     def resolve_strong_component!(component_cycled_vertex) # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
-      input_values  = component_cycled_vertex.incoming_edges.filter(&:active?).flat_map { |edge| edge.from.value }
-      output_values = component_cycled_vertex.outcoming_edges.filter(&:active?).flat_map { |vertex| vertex.to.value }
+      input_values  = component_cycled_vertex.incoming_edges.flat_map { |edge| edge.from.value }
+      output_values = component_cycled_vertex.outcoming_edges.flat_map { |vertex| vertex.to.value }
 
       active_vertexes = vertexes.filter(&:active?)
       input_vertexes = active_vertexes.reject { |vertex| (input_values & vertex.value).empty? }
@@ -103,26 +103,12 @@ module EnumMachineContrib
       component_vertexes = active_vertexes.reject { |vertex| (component_cycled_vertex.value & vertex.value).empty? }
 
       single_incoming_vertexes = (component_vertexes + output_vertexes).filter { |vertex| vertex.incoming_edges.size == 1 }
-      single_incoming_vertexes.each do |to_vertex|
-        from_vertex = to_vertex.incoming_edges.first.from
-
-        (from_vertex.incoming_edges + from_vertex.outcoming_edges)
-          .group_by { |edge| [edge.from.value.to_s, edge.to.value.to_s].sort }
-          .values
-          .filter { |current_edges| current_edges.size > 1 }.each do |current_edges|
-            current_edges.each do |edge|
-              # S1 -> S2; S2 -> [S1, S3]
-              # drops back reference S2 -> S1
-              edge.dropped! if edge.from == from_vertex
-            end
-          end
-      end
 
       resolved_not_visited_vertexes = []
 
       current_vertexes = [component_cycled_vertex]
       loop do
-        next_vertexes = current_vertexes.flat_map { |vertex| vertex.outcoming_edges.filter_map { |edge| edge.to if edge.active? } }
+        next_vertexes = current_vertexes.flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
         resolved_not_visited_vertexes += next_vertexes.reject(&:cycled?)
         current_vertexes = next_vertexes
         break if next_vertexes.empty?

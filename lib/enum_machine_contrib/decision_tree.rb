@@ -8,7 +8,7 @@ module EnumMachineContrib
     include TSort
 
     def tsort_each_child(node, &_block)
-      fetch(node).outcoming_edges.each { |edge| yield(edge.to.value) if edge.active? }
+      fetch(node).outcoming_edges.each { |edge| yield(edge.to.value) }
     end
 
     def tsort_each_node(&_block)
@@ -24,7 +24,7 @@ module EnumMachineContrib
 
         to_value_list.each do |to_value|
           vertex_by_value[to_value] ||= Vertex[to_value]
-          from_vertex.add_edge(vertex_by_value[to_value])
+          from_vertex.edge_to(vertex_by_value[to_value])
         end
       end
 
@@ -50,7 +50,7 @@ module EnumMachineContrib
         current_edge = nil
 
         visited_vertexes.each do |vertex|
-          current_edge = fetch(vertex.value).outcoming_edges.detect { |edge| edge.active? && edge.to == to_vertex }
+          current_edge = fetch(vertex.value).outcoming_edges.detect { |edge| edge.to == to_vertex }
           break if current_edge
         end
 
@@ -73,7 +73,7 @@ module EnumMachineContrib
       each_value do |vertex|
         next unless vertex.active?
 
-        resolved_hash[vertex.value] = vertex.outcoming_edges.filter_map { |edge| edge.to.value if edge.active? }
+        resolved_hash[vertex.value] = vertex.outcoming_edges.map { |edge| edge.to.value }
       end
 
       resolved_hash
@@ -123,7 +123,7 @@ module EnumMachineContrib
 
       transitions =
         visible_vertexes.flat_map do |vertex|
-          vertex.outcoming_edges.filter_map do |edge|
+          vertex.outcoming_edges.all.filter_map do |edge|
             if (!edge.from.combined? && (combined_values & edge.from.value).any?) ||
                (!edge.to.combined? && (combined_values & edge.to.value).any?)
               next

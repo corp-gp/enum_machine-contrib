@@ -37,6 +37,13 @@ module EnumMachineContrib
         !dropped?
       end
 
+      def dropped!
+        self.mode = :dropped
+
+        to.incoming_edges.delete(self)
+        from.outcoming_edges.delete(self)
+      end
+
       def resolved!
         self.mode = :resolved
 

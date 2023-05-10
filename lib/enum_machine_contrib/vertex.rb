@@ -4,14 +4,16 @@ module EnumMachineContrib
 
   Vertex =
     Struct.new(:value) do
-      attr_accessor :mode, :incoming_edges, :outcoming_edges, :level
+      attr_accessor :mode, :level
+      attr_reader :incoming_edges, :outcoming_edges
 
       VERTEX_MODES = %i[pending dropped combined cycled].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
 
       def initialize(value)
         self.value = value
-        self.outcoming_edges = Set.new
-        self.incoming_edges = Set.new
+
+        @incoming_edges  = EdgeSet.new
+        @outcoming_edges = EdgeSet.new
 
         @resolved = false
         pending!
@@ -56,11 +58,11 @@ module EnumMachineContrib
         outcoming_edges.each(&:dropped!)
       end
 
-      def add_edge(to_vertex)
+      def edge_to(to_vertex)
         new_edge = Edge.new(self, to_vertex)
 
-        outcoming_edges << new_edge
-        to_vertex.incoming_edges << new_edge
+        outcoming_edges.add(new_edge)
+        to_vertex.incoming_edges.add(new_edge)
 
         new_edge
       end
@@ -70,17 +72,15 @@ module EnumMachineContrib
 
         replacing_vertexes.each do |replacing_vertex|
           replacing_vertex.incoming_edges.each do |edge|
-            next unless edge.active?
             next if replacing_vertexes.include?(edge.from)
 
-            edge.from.add_edge(new_vertex)
+            edge.from.edge_to(new_vertex)
           end
 
           replacing_vertex.outcoming_edges.filter_map do |edge|
-            next unless edge.active?
             next if replacing_vertexes.include?(edge.to)
 
-            new_vertex.add_edge(edge.to)
+            new_vertex.edge_to(edge.to)
           end
 
           replacing_vertex.dropped!
@@ -91,6 +91,20 @@ module EnumMachineContrib
 
       def inspect
         "<Vertex [#{mode}] value=#{value || 'nil'}>"
+      end
+
+      class EdgeSet < Set
+        attr_accessor :all
+
+        def initialize(*)
+          @all = Set.new
+          super
+        end
+
+        def add(value)
+          @all << value
+          super
+        end
       end
     end
 
