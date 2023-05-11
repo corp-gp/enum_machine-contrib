@@ -104,24 +104,12 @@ module EnumMachineContrib
 
       single_incoming_vertexes = (component_vertexes + output_vertexes).filter { |vertex| vertex.incoming_edges.size == 1 }
 
-      resolved_not_visited_vertexes = []
-
-      current_vertexes = [component_cycled_vertex]
-      loop do
-        next_vertexes = current_vertexes.flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
-        resolved_not_visited_vertexes += next_vertexes.reject(&:cycled?)
-        current_vertexes = next_vertexes
-        break if next_vertexes.empty?
-      end
-
       single_incoming_chains = []
       single_incoming_vertexes.each do |vertex|
         single_incoming_edge = vertex.incoming_edges.first
         # S1 -> [S2, S3]; S2 -> S3
         # resolve S1 -> S2 because it is only one path to S2
         single_incoming_edge.resolved!
-
-        resolved_not_visited_vertexes << single_incoming_edge.to
 
         current_chain = single_incoming_chains.detect { |chain| chain.first == single_incoming_edge.to || chain.last == single_incoming_edge.from }
         if current_chain
@@ -138,6 +126,28 @@ module EnumMachineContrib
       end
 
       single_incoming_chains.each do |chain|
+        chain.each do |vertex|
+          vertex.outcoming_edges.each do |edge|
+            if chain.include?(edge.to) && chain.index(vertex) > chain.index(edge.to)
+              # S1 -> S2; S2 -> S3; S3 -> S1
+              # drop back reference S3 -> S1
+              edge.dropped!
+            end
+          end
+        end
+
+        chain_preceding_vertexes  = chain[0].incoming_edges.map(&:from) & (input_vertexes + component_vertexes)
+        chain_achievable_vertexes = chain[1..-1].flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
+
+        pre_chain_vertexes = chain_preceding_vertexes - chain_achievable_vertexes
+
+        if pre_chain_vertexes.size == 1
+          single_incoming_edge = chain[0].incoming_edges.detect { |edge| edge.from == pre_chain_vertexes[0] }
+          single_incoming_edge.resolved!
+
+          chain.unshift(single_incoming_edge.from)
+        end
+
         chain.flat_map { |vertex| vertex.outcoming_edges.to_a }.group_by(&:to).each_value do |outcoming_edges|
           next if outcoming_edges.size < 2
 
@@ -145,37 +155,6 @@ module EnumMachineContrib
           # drops S1 -> S3, because S1 -> S2 resolved as only one path and S3 is reachable from S2
           outcoming_edges[0..outcoming_edges.size - 2].each(&:dropped!)
         end
-      end
-
-      current_vertexes = input_vertexes
-      visited_vertexes = []
-      loop do
-        current_following_vertexes = current_vertexes.flat_map { |vertex| vertex.outcoming_edges.map(&:to) }.uniq - visited_vertexes
-
-        if current_following_vertexes.size > 1
-          reachable_vertexes = resolved_not_visited_vertexes.flat_map { |vertex| vertex.outcoming_edges.map(&:to) }.uniq
-          break if reachable_vertexes.empty?
-
-          current_following_vertexes -= reachable_vertexes
-        end
-
-        current_vertexes.each do |from_vertex|
-          from_vertex.outcoming_edges.each do |edge|
-            next if edge.resolved?
-
-            if current_following_vertexes.include?(edge.to)
-              edge.resolved! if current_following_vertexes.size == 1
-            elsif resolved_not_visited_vertexes.include?(edge.to)
-              edge.dropped!
-            end
-          end
-        end
-
-        current_vertexes = current_following_vertexes
-        resolved_not_visited_vertexes -= current_following_vertexes
-        visited_vertexes += current_vertexes
-
-        break if current_vertexes.empty?
       end
     end
 
