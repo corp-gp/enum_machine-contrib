@@ -165,6 +165,40 @@ module EnumMachineContrib
           outcoming_edges[0..outcoming_edges.size - 2].each(&:dropped!)
         end
       end
+
+      around_vertexes = input_vertexes + component_vertexes + output_vertexes
+
+      component_vertexes.each do |cutting_vertex|
+        rest_vertexes = around_vertexes.excluding(cutting_vertex)
+
+        input_achievable_vertexes = next_achievable_vertexes(input_vertexes[0], rest_vertexes, visited: Set.new([cutting_vertex]))
+        next if input_achievable_vertexes.size == around_vertexes.size - 1
+
+        rest_vertexes -= input_achievable_vertexes
+
+        cutting_vertex.incoming_edges.each do |edge|
+          if rest_vertexes.include?(edge.from)
+            # S1 -> S3; S2 -> S3; S3 -> [S4, S5]; S4 -> S3; S4 -> S6; S5 -> S6
+            # drops S4 -> S3, because main flow S1 -> S3 -> S6
+            edge.dropped!
+          end
+        end
+      end
+    end
+
+    def next_achievable_vertexes(vertex, all, visited: Set.new)
+      return [] if visited.include?(vertex)
+
+      achievable_vertexes = [vertex]
+      visited << vertex
+
+      vertex.outcoming_edges.each do |edge|
+        if all.include?(edge.to)
+          achievable_vertexes += next_achievable_vertexes(edge.to, all, visited: visited)
+        end
+      end
+
+      achievable_vertexes
     end
 
     def array_wrap(value)
