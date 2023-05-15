@@ -129,6 +129,10 @@ module EnumMachineContrib
               next
             end
 
+            if !edge.active? && (edge.from.combined? || edge.to.combined? || edge.from.cycled? || edge.to.cycled?)
+              next
+            end
+
             attrs = []
             if edge.active?
               attrs << ACTIVE_EDGE_STYLE

@@ -201,7 +201,7 @@ module EnumMachineContrib
       achievable_vertexes
     end
 
-    def array_wrap(value)
+    private def array_wrap(value)
       if value.nil?
         [nil]
       else
