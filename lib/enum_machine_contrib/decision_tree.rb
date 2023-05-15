@@ -121,7 +121,7 @@ module EnumMachineContrib
           "subgraph #{nodes[vertex][:cluster_id]} { color=blue style=dashed #{vertex.value.join(' ')} }"
         end
 
-      transitions =
+      pending_edges =
         visible_vertexes.flat_map do |vertex|
           vertex.outcoming_edges.all.filter_map do |edge|
             if (!edge.from.combined? && (combined_values & edge.from.value).any?) ||
@@ -133,17 +133,37 @@ module EnumMachineContrib
               next
             end
 
-            attrs = []
-            if edge.active?
-              attrs << ACTIVE_EDGE_STYLE
-              attrs << "ltail=#{nodes[edge.from][:cluster_id]}" if edge.from.cycled?
-              attrs << "lhead=#{nodes[edge.to][:cluster_id]}" if edge.to.cycled?
-            else
-              attrs << INACTIVE_EDGE_STYLE
-            end
-            "#{nodes[edge.from][:id]} -> #{nodes[edge.to][:id]} [#{attrs.join(' ')}]"
+            edge
           end
         end
+
+
+      transitions = []
+
+      until pending_edges.empty?
+        current_edge = pending_edges.shift
+
+        attrs = []
+
+        if current_edge.active?
+          attrs << ACTIVE_EDGE_STYLE
+          attrs << "ltail=#{nodes[current_edge.from][:cluster_id]}" if current_edge.from.cycled?
+          attrs << "lhead=#{nodes[current_edge.to][:cluster_id]}" if current_edge.to.cycled?
+        else
+          attrs << INACTIVE_EDGE_STYLE
+        end
+
+        unless current_edge.active?
+          reverse_edge = pending_edges.detect { |edge| !edge.active? && edge.from == current_edge.to && edge.to == current_edge.from }
+
+          if reverse_edge
+            pending_edges.delete(reverse_edge)
+            attrs << 'dir=both'
+          end
+        end
+
+        transitions << "#{nodes[current_edge.from][:id]} -> #{nodes[current_edge.to][:id]} [#{attrs.join(' ')}]"
+      end
 
       <<~DOT
         digraph {
