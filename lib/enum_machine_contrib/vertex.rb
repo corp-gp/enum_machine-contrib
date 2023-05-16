@@ -90,19 +90,19 @@ module EnumMachineContrib
       end
 
       def inspect
-        "<Vertex [#{mode}] value=#{value || 'nil'}>"
+        "<Vertex [#{mode}]#{'[resolved]' if resolved?} value=#{value || 'nil'}>"
       end
 
       class EdgeSet < Set
-        attr_accessor :all
+        attr_accessor :with_dropped
 
         def initialize(*)
-          @all = Set.new
+          @with_dropped = Set.new
           super
         end
 
         def add(value)
-          @all << value
+          @with_dropped << value
           super
         end
       end

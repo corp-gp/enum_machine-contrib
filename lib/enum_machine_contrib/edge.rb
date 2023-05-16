@@ -6,12 +6,13 @@ module EnumMachineContrib
     Struct.new(:from, :to) do
       attr_accessor :mode
 
-      EDGE_MODES = %i[pending resolved dropped].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
+      EDGE_MODES = %i[pending dropped].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
 
       def initialize(from, to)
         self.from = from
         self.to   = to
 
+        @resolved = false
         pending!
       end
 
@@ -44,8 +45,12 @@ module EnumMachineContrib
         from.outcoming_edges.delete(self)
       end
 
+      def resolved?
+        @resolved == true
+      end
+
       def resolved!
-        self.mode = :resolved
+        @resolved = true
 
         to.incoming_edges.each do |edge|
           edge.dropped! unless edge == self
@@ -57,7 +62,7 @@ module EnumMachineContrib
       end
 
       def inspect
-        "<Edge [#{mode}] #{from.inspect} -> #{to.inspect}>"
+        "<Edge [#{mode}]#{'[resolved]' if resolved?} #{from.inspect} -> #{to.inspect}>"
       end
     end
 

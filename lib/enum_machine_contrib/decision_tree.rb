@@ -121,9 +121,11 @@ module EnumMachineContrib
           "subgraph #{nodes[vertex][:cluster_id]} { color=blue style=dashed #{vertex.value.join(' ')} }"
         end
 
+      resolved_not_active_edges = []
+
       pending_edges =
         visible_vertexes.flat_map do |vertex|
-          vertex.outcoming_edges.all.filter_map do |edge|
+          vertex.incoming_edges.with_dropped.filter_map do |edge|
             if (!edge.from.combined? && (combined_values & edge.from.value).any?) ||
                (!edge.to.combined? && (combined_values & edge.to.value).any?)
               next
@@ -133,10 +135,20 @@ module EnumMachineContrib
               next
             end
 
+            if edge.resolved? && !edge.active?
+              resolved_not_active_edges << edge
+            end
+
             edge
           end
         end
 
+      resolved_not_active_edges.each do |current_edge|
+        pending_edges.delete_if do |edge|
+          (edge.from.cycled? && (edge.from.value & current_edge.from.value).any? && edge.to == current_edge.to) ||
+            (edge.from == current_edge.from && edge.to.cycled? && (edge.to.value & current_edge.to.value).any?)
+        end
+      end
 
       transitions = []
 
@@ -145,7 +157,7 @@ module EnumMachineContrib
 
         attrs = []
 
-        if current_edge.active?
+        if current_edge.resolved?
           attrs << ACTIVE_EDGE_STYLE
           attrs << "ltail=#{nodes[current_edge.from][:cluster_id]}" if current_edge.from.cycled?
           attrs << "lhead=#{nodes[current_edge.to][:cluster_id]}" if current_edge.to.cycled?
@@ -153,10 +165,10 @@ module EnumMachineContrib
           attrs << INACTIVE_EDGE_STYLE
         end
 
-        unless current_edge.active?
-          reverse_edge = pending_edges.detect { |edge| !edge.active? && edge.from == current_edge.to && edge.to == current_edge.from }
+        unless current_edge.resolved?
+          reverse_edge = pending_edges.detect { |edge| edge.from == current_edge.to && edge.to == current_edge.from }
 
-          if reverse_edge
+          if reverse_edge && !reverse_edge.resolved?
             pending_edges.delete(reverse_edge)
             attrs << 'dir=both'
           end
