@@ -15,5 +15,6 @@ module EnumMachineContrib
   autoload :DecisionTree, 'enum_machine_contrib/decision_tree'
   autoload :Vertex, 'enum_machine_contrib/vertex'
   autoload :Edge, 'enum_machine_contrib/edge'
+  autoload :EdgeSet, 'enum_machine_contrib/edge_set'
 
 end

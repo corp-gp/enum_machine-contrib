@@ -134,7 +134,7 @@ module EnumMachineContrib
 
       single_incoming_chains.each do |chain|
         chain_preceding_vertexes  = chain[0].incoming_edges.map(&:from) & (input_vertexes + component_vertexes)
-        chain_achievable_vertexes = chain[1..-1].flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
+        chain_achievable_vertexes = chain[1..].flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
 
         pre_chain_vertexes = chain_preceding_vertexes - chain_achievable_vertexes
 
