@@ -116,8 +116,6 @@ module EnumMachineContrib
       single_incoming_chains = []
       single_incoming_vertexes.each do |vertex|
         single_incoming_edge = vertex.incoming_edges.first
-        # S1 -> [S2, S3]; S2 -> S3
-        # resolve S1 -> S2 because it is only one path to S2
         single_incoming_edge.resolved!
 
         current_chain = single_incoming_chains.detect { |chain| chain.first == single_incoming_edge.to || chain.last == single_incoming_edge.from }
@@ -135,16 +133,6 @@ module EnumMachineContrib
       end
 
       single_incoming_chains.each do |chain|
-        chain.each do |vertex|
-          vertex.outcoming_edges.each do |edge|
-            if chain.include?(edge.to) && chain.index(vertex) > chain.index(edge.to)
-              # S1 -> S2; S2 -> S3; S3 -> S1
-              # drop back reference S3 -> S1
-              edge.dropped!
-            end
-          end
-        end
-
         chain_preceding_vertexes  = chain[0].incoming_edges.map(&:from) & (input_vertexes + component_vertexes)
         chain_achievable_vertexes = chain[1..-1].flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
 
@@ -160,26 +148,32 @@ module EnumMachineContrib
         chain.flat_map { |vertex| vertex.outcoming_edges.to_a }.group_by(&:to).each_value do |outcoming_edges|
           next if outcoming_edges.size < 2
 
-          # S1 -> [S2, S3]; S2 -> S3
-          # drops S1 -> S3, because S1 -> S2 resolved as only one path and S3 is reachable from S2
           outcoming_edges[0..outcoming_edges.size - 2].each(&:dropped!)
         end
       end
 
       around_vertexes = input_vertexes + component_vertexes + output_vertexes
 
-      component_vertexes.each do |cutting_vertex|
-        rest_vertexes = around_vertexes.excluding(cutting_vertex)
+      component_vertexes.each do |maybe_bottlneck_vertex|
+        rest_vertexes = around_vertexes.excluding(maybe_bottlneck_vertex)
 
-        input_achievable_vertexes = next_achievable_vertexes(input_vertexes[0], rest_vertexes, visited: Set.new([cutting_vertex]))
-        next if input_achievable_vertexes.size == around_vertexes.size - 1
+        input_achievable_vertexes = next_achievable_vertexes(input_vertexes[0], rest_vertexes, visited: Set.new([maybe_bottlneck_vertex]))
+        next if input_achievable_vertexes.size == rest_vertexes.size
+
+        maybe_bottlneck_vertex.outcoming_edges.each do |current_edge|
+          if input_achievable_vertexes.include?(current_edge.to) && maybe_bottlneck_vertex.incoming_edges.map(&:from).exclude?((current_edge.to))
+            current_edge.to.incoming_edges.each do |edge|
+              unless edge.from == maybe_bottlneck_vertex
+                edge.dropped!
+              end
+            end
+          end
+        end
 
         rest_vertexes -= input_achievable_vertexes
 
-        cutting_vertex.incoming_edges.each do |edge|
+        maybe_bottlneck_vertex.incoming_edges.each do |edge|
           if rest_vertexes.include?(edge.from)
-            # S1 -> S3; S2 -> S3; S3 -> [S4, S5]; S4 -> S3; S4 -> S6; S5 -> S6
-            # drops S4 -> S3, because main flow S1 -> S3 -> S6
             edge.dropped!
           end
         end

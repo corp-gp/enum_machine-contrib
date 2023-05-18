@@ -110,8 +110,11 @@ module EnumMachineContrib
 
       vertexes_by_level = visible_vertexes.filter(&:level).sort_by(&:level).group_by(&:level)
       node_ranks =
-        vertexes_by_level.map do |_level, vertexes_same_rank|
-          "{ rank=same #{vertexes_same_rank.reject(&:combined?).reject(&:cycled?).map { |vertex| nodes[vertex][:id] }.join(' ')} }"
+        vertexes_by_level.filter_map do |_level, vertexes_same_rank|
+          vertex_ids = vertexes_same_rank.filter_map { |vertex| nodes[vertex][:id] if !vertex.cycled? && !vertex.combined? }
+          next if vertex_ids.empty?
+
+          "{ rank=same #{vertex_ids.join(' ')} }"
         end
 
       node_labels = plain_vertexes.map { |vertex| "#{nodes[vertex][:id]} [label=\"#{nodes[vertex][:label]}\"]" }
