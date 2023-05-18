@@ -5,15 +5,15 @@ module EnumMachineContrib
   Vertex =
     Struct.new(:value) do
       attr_accessor :mode, :level
-      attr_reader :incoming_edges, :outcoming_edges
+      attr_reader :incoming_edges, :outgoing_edges
 
       VERTEX_MODES = %i[pending dropped combined cycled].freeze # rubocop:disable Lint/ConstantDefinitionInBlock
 
       def initialize(value)
         self.value = value
 
-        @incoming_edges  = EdgeSet.new
-        @outcoming_edges = EdgeSet.new
+        @incoming_edges = EdgeSet.new
+        @outgoing_edges = EdgeSet.new
 
         @resolved = false
         pending!
@@ -55,13 +55,13 @@ module EnumMachineContrib
         self.mode = :dropped
 
         incoming_edges.each(&:dropped!)
-        outcoming_edges.each(&:dropped!)
+        outgoing_edges.each(&:dropped!)
       end
 
       def edge_to(to_vertex)
         new_edge = Edge.new(self, to_vertex)
 
-        outcoming_edges.add(new_edge)
+        outgoing_edges.add(new_edge)
         to_vertex.incoming_edges.add(new_edge)
 
         new_edge
@@ -77,7 +77,7 @@ module EnumMachineContrib
             edge.from.edge_to(new_vertex)
           end
 
-          replacing_vertex.outcoming_edges.filter_map do |edge|
+          replacing_vertex.outgoing_edges.filter_map do |edge|
             next if replacing_vertexes.include?(edge.to)
 
             new_vertex.edge_to(edge.to)

@@ -63,7 +63,7 @@ module EnumMachineContrib
       vertexes.filter(&:active?).to_h do |vertex|
         [
           vertex.value,
-          vertex.outcoming_edges.map { |edge| edge.to.value },
+          vertex.outgoing_edges.map { |edge| edge.to.value },
         ]
       end
     end
@@ -79,7 +79,7 @@ module EnumMachineContrib
     end
 
     private def combine_equal_vertexes!
-      vertexes.group_by { |vertex| [vertex.incoming_edges.map(&:from), vertex.outcoming_edges.map(&:to)] }.each_value do |combining_vertexes|
+      vertexes.group_by { |vertex| [vertex.incoming_edges.map(&:from), vertex.outgoing_edges.map(&:to)] }.each_value do |combining_vertexes|
         next if combining_vertexes.size < 2
 
         new_vertex = Vertex.replace!(combining_vertexes)
@@ -88,13 +88,13 @@ module EnumMachineContrib
         @vertexes << new_vertex
 
         @edges.merge(new_vertex.incoming_edges)
-        @edges.merge(new_vertex.outcoming_edges)
+        @edges.merge(new_vertex.outgoing_edges)
       end
     end
 
     def resolve_strong_component!(component_cycled_vertex) # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
       input_values  = component_cycled_vertex.incoming_edges.flat_map { |edge| edge.from.value }
-      output_values = component_cycled_vertex.outcoming_edges.flat_map { |vertex| vertex.to.value }
+      output_values = component_cycled_vertex.outgoing_edges.flat_map { |vertex| vertex.to.value }
 
       active_vertexes = vertexes.filter(&:active?)
       input_vertexes  = active_vertexes.reject { |vertex| (input_values & vertex.value).empty? }
@@ -133,10 +133,10 @@ module EnumMachineContrib
       end
 
       single_incoming_chains.each do |chain|
-        chain_preceding_vertexes  = chain[0].incoming_edges.map(&:from) & (input_vertexes + component_vertexes)
-        chain_achievable_vertexes = chain[1..].flat_map { |vertex| vertex.outcoming_edges.map(&:to) }
+        chain_preceding_vertexes = chain[0].incoming_edges.map(&:from) & (input_vertexes + component_vertexes)
+        chain_reachable_vertexes = chain[1..].flat_map { |vertex| vertex.outgoing_edges.map(&:to) }
 
-        pre_chain_vertexes = chain_preceding_vertexes - chain_achievable_vertexes
+        pre_chain_vertexes = chain_preceding_vertexes - chain_reachable_vertexes
 
         if pre_chain_vertexes.size == 1
           single_incoming_edge = chain[0].incoming_edges.detect { |edge| edge.from == pre_chain_vertexes[0] }
@@ -145,10 +145,10 @@ module EnumMachineContrib
           chain.unshift(single_incoming_edge.from)
         end
 
-        chain.flat_map { |vertex| vertex.outcoming_edges.to_a }.group_by(&:to).each_value do |outcoming_edges|
-          next if outcoming_edges.size < 2
+        chain.flat_map { |vertex| vertex.outgoing_edges.to_a }.group_by(&:to).each_value do |outgoing_edges|
+          next if outgoing_edges.size < 2
 
-          outcoming_edges[0..outcoming_edges.size - 2].each(&:dropped!)
+          outgoing_edges[0..outgoing_edges.size - 2].each(&:dropped!)
         end
       end
 
@@ -157,11 +157,11 @@ module EnumMachineContrib
       component_vertexes.each do |maybe_bottlneck_vertex|
         rest_vertexes = around_vertexes.excluding(maybe_bottlneck_vertex)
 
-        input_achievable_vertexes = next_achievable_vertexes(input_vertexes[0], rest_vertexes, visited: Set.new([maybe_bottlneck_vertex]))
-        next if input_achievable_vertexes.size == rest_vertexes.size
+        input_reachable_vertexes = next_reachable_vertexes(input_vertexes[0], rest_vertexes, visited: Set.new([maybe_bottlneck_vertex]))
+        next if input_reachable_vertexes.size == rest_vertexes.size
 
-        maybe_bottlneck_vertex.outcoming_edges.each do |current_edge|
-          if input_achievable_vertexes.include?(current_edge.to) && maybe_bottlneck_vertex.incoming_edges.map(&:from).exclude?((current_edge.to))
+        maybe_bottlneck_vertex.outgoing_edges.each do |current_edge|
+          if input_reachable_vertexes.include?(current_edge.to) && maybe_bottlneck_vertex.incoming_edges.map(&:from).exclude?((current_edge.to))
             current_edge.to.incoming_edges.each do |edge|
               unless edge.from == maybe_bottlneck_vertex
                 edge.dropped!
@@ -170,7 +170,7 @@ module EnumMachineContrib
           end
         end
 
-        rest_vertexes -= input_achievable_vertexes
+        rest_vertexes -= input_reachable_vertexes
 
         maybe_bottlneck_vertex.incoming_edges.each do |edge|
           if rest_vertexes.include?(edge.from)
@@ -180,19 +180,19 @@ module EnumMachineContrib
       end
     end
 
-    def next_achievable_vertexes(vertex, all, visited: Set.new)
+    def next_reachable_vertexes(vertex, all, visited: Set.new)
       return [] if visited.include?(vertex)
 
-      achievable_vertexes = [vertex]
+      reachable_vertexes = [vertex]
       visited << vertex
 
-      vertex.outcoming_edges.each do |edge|
+      vertex.outgoing_edges.each do |edge|
         if all.include?(edge.to)
-          achievable_vertexes += next_achievable_vertexes(edge.to, all, visited: visited)
+          reachable_vertexes += next_reachable_vertexes(edge.to, all, visited: visited)
         end
       end
 
-      achievable_vertexes
+      reachable_vertexes
     end
 
     private def array_wrap(value)

@@ -8,7 +8,7 @@ module EnumMachineContrib
     include TSort
 
     def tsort_each_child(node, &_block)
-      fetch(node).outcoming_edges.each { |edge| yield(edge.to.value) }
+      fetch(node).outgoing_edges.each { |edge| yield(edge.to.value) }
     end
 
     def tsort_each_node(&_block)
@@ -50,7 +50,7 @@ module EnumMachineContrib
         current_edge = nil
 
         visited_vertexes.each do |vertex|
-          current_edge = fetch(vertex.value).outcoming_edges.detect { |edge| edge.to == to_vertex }
+          current_edge = fetch(vertex.value).outgoing_edges.detect { |edge| edge.to == to_vertex }
           break if current_edge
         end
 
@@ -61,7 +61,7 @@ module EnumMachineContrib
       end
 
       each_value do |vertex|
-        vertex.outcoming_edges.each do |edge|
+        vertex.outgoing_edges.each do |edge|
           edge.dropped! unless edge.resolved?
         end
       end
@@ -73,7 +73,7 @@ module EnumMachineContrib
       each_value do |vertex|
         next unless vertex.active?
 
-        resolved_hash[vertex.value] = vertex.outcoming_edges.map { |edge| edge.to.value }
+        resolved_hash[vertex.value] = vertex.outgoing_edges.map { |edge| edge.to.value }
       end
 
       resolved_hash

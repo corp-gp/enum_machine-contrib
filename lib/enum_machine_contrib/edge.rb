@@ -42,7 +42,7 @@ module EnumMachineContrib
         self.mode = :dropped
 
         to.incoming_edges.delete(self)
-        from.outcoming_edges.delete(self)
+        from.outgoing_edges.delete(self)
       end
 
       def resolved?
@@ -56,7 +56,7 @@ module EnumMachineContrib
           edge.dropped! unless edge == self
         end
 
-        to.outcoming_edges.detect { |edge| edge.to == from }&.dropped!
+        to.outgoing_edges.detect { |edge| edge.to == from }&.dropped!
 
         to.resolved!
       end
