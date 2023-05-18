@@ -2,7 +2,7 @@
 
 The repository contains an extension to [enum_machine](https://github.com/corp-gp/enum_machine) that allows you to generate a graphical representation of the state graph. The open-source solution [Graphviz](https://graphviz.org/) is used for the display.
 
-Описание доступно на [русском языке](readme.ru.md).
+**Описание доступно на [русском языке](README.ru.md)**
 
 ## Setup.
 
@@ -20,7 +20,7 @@ For installation of [GraphViz](https://graphviz.org/) see corresponding [instruc
 
 Suppose there is an AR model `Order` with a state machine specified by [enum_machine](https://github.com/corp-gp/enum_machine)
 
-`app/models/order.rb'
+`app/models/order.rb`
 ```ruby
 class Order < ActiveRecord::Base
   enum_machine :state, %w[created wait_for_send billed need_to_pay paid cancelled shipped lost received closed] do
@@ -51,7 +51,7 @@ The result will be the file `tmp/order.png`:
 
 A graph of states appears as a directed and possibly cyclic graph, from whose initial node you can get to one of the final nodes. With complex interrelationships even the graphical representation becomes a load to perceive, especially with [cycled vertices](https://en.wikipedia.org/wiki/Cycle_(graph_theory)). Therefore, there is additional markup in the figure above. The red lines mark the decision tree in which vertices are connected in [topological order](https://en.wikipedia.org/wiki/Topological_sorting). In simple words, we need to find an order of vertices in which all edges of the graph lead from an earlier vertex to a later one.
 
-Algorithms of topological sorting for oriented acyclic graph are well known. There is a built-in module [TSort](https://ruby-doc.org/stdlib-3.0.0/libdoc/tsort/rdoc/TSort.html) in the `ruby' kernel which uses, among others, the Tarjan algorithm. The `RubyOnRails` module uses topological sorting to initialize the application. Each `Railtie' must not be loaded before all its dependencies are loaded.
+Algorithms of topological sorting for oriented acyclic graph are well known. There is a built-in module [TSort](https://ruby-doc.org/stdlib-3.0.0/libdoc/tsort/rdoc/TSort.html) in the `ruby` kernel which uses, among others, the Tarjan algorithm. The `RubyOnRails` module uses topological sorting to initialize the application. Each `Railtie` must not be loaded before all its dependencies are loaded.
 
 Topological sorting is not possible for a cyclic graph. In practice, the state-machine is unlikely to be a fully cyclic graph where all vertices are connected to all vertices. Rather possible some related [strongly connected components](https://en.wikipedia.org/wiki/Strongly_connected_component). This assumption allows us to make the first simplification of the decision tree problem. We look for strong connected components in the graph, replace them with a combined vertex, and then construct a topological sort for the combined vertices.
 
