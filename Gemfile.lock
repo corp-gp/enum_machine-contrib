@@ -28,7 +28,7 @@ GIT
 PATH
   remote: .
   specs:
-    enum_machine-contrib (0.1.0)
+    enum_machine-contrib (1.0.0)
       activesupport
       enum_machine
       ruby-graphviz
