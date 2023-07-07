@@ -12,7 +12,7 @@
 
     $ gem install enum_machine-contrib
 
-Установку [GraphViz](https://graphviz.org/) смотрите в соответствующей [инструкции](https://graphviz.org/download/)
+**Установку [GraphViz](https://graphviz.org/) смотрите в соответствующей [инструкции](https://graphviz.org/download/)**
 
 ## Использование
 
