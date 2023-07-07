@@ -14,7 +14,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     $ gem install enum_machine-contrib
 
-For installation of [GraphViz](https://graphviz.org/) see corresponding [instructions](https://graphviz.org/download/)
+**For installation of [GraphViz](https://graphviz.org/) see corresponding [instructions](https://graphviz.org/download/)**
 
 ## Usage
 
